@@ -1,0 +1,238 @@
+:root {
+  --bg: #ffffff;
+  --fg: #0f172a; /* slate-900-ish */
+  --muted: rgba(15, 23, 42, 0.68);
+  --panel: rgba(255, 255, 255, 0.78);
+  --panel-border: rgba(15, 23, 42, 0.10);
+  --shadow: 0 14px 40px rgba(2, 6, 23, 0.10);
+  --cyan: #0ea5e9; /* sky-500 */
+  --teal: #14b8a6; /* teal-500 */
+  --outbreak: #ff4136;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Bootstrap helper colors (match light theme) */
+.text-body-secondary {
+  color: var(--muted) !important;
+}
+
+.page-hero {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--bg);
+}
+
+.hero-title,
+.story-title {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
+.hero-subtitle,
+.story-text {
+  color: var(--muted);
+}
+
+.story-section {
+  padding: 2rem 0;
+}
+
+.viz1-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.legend-line {
+  width: 18px;
+  height: 0;
+  border-top: 2px solid transparent;
+}
+
+.legend-box {
+  width: 14px;
+  height: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.legend-coverage {
+  border-top-color: var(--teal);
+}
+
+.legend-cases {
+  background: rgba(255, 65, 54, 0.32);
+}
+
+.legend-danger {
+  background: rgba(255, 65, 54, 0.18);
+}
+
+.legend-threshold,
+.legend-hover {
+  border-top-style: dashed;
+  border-top-color: rgba(15, 23, 42, 0.45);
+}
+
+.viz2-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+  align-items: flex-end;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.viz2-legend-block {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.viz2-legend-title {
+  font-size: 0.8rem;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.legend-ramp {
+  width: 180px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 38%, #34d399 75%, #0ea5e9 100%);
+}
+
+.legend-scale-labels {
+  width: 180px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: rgba(15, 23, 42, 0.62);
+}
+
+.legend-bubble-scale {
+  width: 180px;
+  height: 30px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.legend-bubble {
+  border-radius: 999px;
+  display: inline-block;
+  background: rgba(255, 65, 54, 0.45);
+  border: 1px solid rgba(255, 65, 54, 0.7);
+}
+
+.bubble-sm {
+  width: 8px;
+  height: 8px;
+}
+
+.bubble-md {
+  width: 14px;
+  height: 14px;
+}
+
+.bubble-lg {
+  width: 22px;
+  height: 22px;
+}
+
+.legend-bubble-labels {
+  width: 180px;
+}
+
+.vis-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 1rem auto 0 auto;
+  position: relative;
+  min-height: min(72vh, 760px);
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  overflow: clip;
+}
+
+/* Keep SVG responsive */
+.vis-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Axes / labels for light mode */
+.axis text {
+  fill: rgba(15, 23, 42, 0.72);
+  font-size: 12px;
+}
+.axis path,
+.axis line {
+  stroke: rgba(15, 23, 42, 0.16);
+}
+
+.grid line {
+  stroke: rgba(15, 23, 42, 0.07);
+}
+
+/* Glassmorphism tooltip (light) */
+.vis-tooltip {
+  position: fixed;
+  z-index: 1080;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(14px, 14px);
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.70);
+  color: var(--fg);
+  box-shadow:
+    0 14px 40px rgba(2, 6, 23, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: 0.9rem;
+  line-height: 1.25;
+  max-width: min(380px, 80vw);
+}
+
+.vis-tooltip.is-visible {
+  opacity: 1;
+}
+
+.tooltip-k {
+  color: rgba(15, 23, 42, 0.62);
+}
+
+.tooltip-v {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.glow-cyan {
+  filter: drop-shadow(0 0 10px rgba(14, 165, 233, 0.22));
+}
+
+.glow-red {
+  filter: drop-shadow(0 0 10px rgba(255, 65, 54, 0.22));
+}

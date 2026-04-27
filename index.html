@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>final_project_group2</title>
+
+    <!-- Typography: serif headings + sans UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="page-hero">
+      <div class="container py-5">
+        <h1 class="display-5 mb-2 hero-title">Visualizing Virus and Their Vaccines</h1>
+        <p class="lead hero-subtitle mb-0">Zoey Tsai, Maxine Hsu, Erica Honadel</p>
+        <p class="hero-subtitle mb-0">Group 2</p>
+      </div>
+    </header>
+
+    <main class="container py-4">
+      <section class="story-section">
+        <h2 class="story-title">Outbreak Timeline</h2>
+        <p class="story-text">
+          This view compares measles vaccination coverage (MCV1) against reported case counts for a selected country over
+          time. Use the country dropdown to switch locations, then drag the brush at the bottom to zoom into a specific date
+          range. Hover anywhere in the chart to inspect the nearest year: the tooltip and highlight markers show the exact
+          coverage level, case count, and whether that year is above or below the herd-immunity threshold.
+        </p>
+        <p class="story-text">
+          Cases are shown on a logarithmic scale because outbreaks can vary by orders of magnitude, from small baseline levels
+          to very large spikes. A linear scale would flatten smaller values and hide meaningful changes, while the log scale
+          keeps both low and high periods readable in the same frame. The dashed 95% reference line reflects a commonly used
+          measles herd-immunity benchmark: when coverage drops below this level, population protection weakens and outbreak risk
+          rises, which is why those segments are explicitly highlighted as a danger zone.
+        </p>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+          <label class="form-label mb-0 me-1" for="countrySelect">Country</label>
+          <select id="countrySelect" class="form-select form-select-sm" style="max-width: 320px"></select>
+          <span class="small text-body-secondary">Measles (MCV1) — threshold 95%</span>
+        </div>
+        <div class="viz1-legend mb-2" aria-label="Outbreak timeline legend">
+          <span class="legend-item"><span class="legend-line legend-coverage"></span>Coverage (MCV1)</span>
+          <span class="legend-item"><span class="legend-box legend-cases"></span>Cases (log area)</span>
+          <span class="legend-item"><span class="legend-box legend-danger"></span>Below threshold</span>
+          <span class="legend-item"><span class="legend-line legend-threshold"></span>Herd threshold</span>
+        </div>
+        <div id="vis-tipping" class="vis-container"></div>
+      </section>
+
+      <section class="story-section">
+        <h2 class="story-title">The Global Outbreak Map</h2>
+        <p class="story-text">
+          This map combines two signals for the selected disease and year: country color encodes vaccination coverage, while
+          bubble size encodes reported case counts. Use the disease dropdown to switch between measles, diphtheria/pertussis,
+          and polio, then move the year slider (or press Play) to animate how risk changes over time. Hover a country or bubble
+          to highlight it, inspect exact values in the tooltip, and compare how local coverage and outbreak burden shift across
+          regions.
+        </p>
+        <p class="story-text">
+          Add context here
+        </p>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+          <label class="form-label mb-0 me-1" for="mapDisease">Disease</label>
+          <select id="mapDisease" class="form-select form-select-sm" style="max-width: 220px"></select>
+          <button id="mapPlay" class="btn btn-sm btn-outline-secondary">Play</button>
+          <input id="mapYear" type="range" class="form-range" style="max-width: 420px" />
+          <span id="mapYearLabel" class="small text-body-secondary"></span>
+        </div>
+        <div class="viz2-legend mb-2" aria-label="Global threat map legend">
+          <div class="viz2-legend-block">
+            <span class="viz2-legend-title">Coverage (%)</span>
+            <div class="legend-ramp" aria-hidden="true"></div>
+            <div class="legend-scale-labels">
+              <span>70</span>
+              <span>80</span>
+              <span>95</span>
+              <span>100</span>
+            </div>
+          </div>
+          <div class="viz2-legend-block">
+            <span class="viz2-legend-title">Cases (bubble size)</span>
+            <div class="legend-bubble-scale" aria-hidden="true">
+              <span class="legend-bubble bubble-sm"></span>
+              <span class="legend-bubble bubble-md"></span>
+              <span class="legend-bubble bubble-lg"></span>
+            </div>
+            <div class="legend-scale-labels legend-bubble-labels">
+              <span>Low</span>
+              <span>Med</span>
+              <span>High</span>
+            </div>
+          </div>
+        </div>
+        <div id="vis-heatmap" class="vis-container"></div>
+      </section>
+    </main>
+
+    <div id="tooltip" class="vis-tooltip" role="tooltip" aria-hidden="true"></div>
+
+    <!-- D3 v7 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- TopoJSON (UMD build exposes global `topojson`) -->
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+    <script src="js/script.js"></script>
+
+    <!-- Bootstrap JS (optional) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
