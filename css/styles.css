@@ -236,3 +236,34 @@ body {
 .glow-red {
   filter: drop-shadow(0 0 10px rgba(255, 65, 54, 0.22));
 }
+
+/* everything below is adapted from https://linkedlist.ch/animate_details_element_60/ */
+
+details > div {
+  overflow: hidden;
+  display: grid;
+  animation-duration: 0.2s;
+}
+
+details > .animation {
+  animation-name: grid-expand;
+  animation-timing-function: ease-out;
+}
+
+details > .collapsing {
+  animation-direction: reverse;
+  animation-timing-function: ease-in;
+}
+
+details > div > div {
+  min-height: 0;
+}
+
+@keyframes grid-expand {
+  0% {
+    grid-template-rows: 0fr;
+  }
+  100% {
+    grid-template-rows: 1fr;
+  }
+}
