@@ -619,7 +619,9 @@ const renderOutbreakTimeline = ({ mount, country, rows, threshold = 95 }) => {
         .attr("cx", px)
         .attr("cy", casesValid ? yCases(d.casesClamped) : 0);
 
-      const [bx, by] = d3.pointer(event, document.body);
+      // Viewport coords: tooltip is position:fixed; body-relative d3.pointer drifts when scrolled.
+      const bx = event.clientX;
+      const by = event.clientY;
       const below = Number.isFinite(d.coverage) && d.coverage < threshold;
       showTooltip(
         [
