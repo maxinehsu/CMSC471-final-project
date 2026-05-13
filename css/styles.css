@@ -309,6 +309,13 @@ details > div > div {
   box-shadow: 0 12px 28px rgba(123, 111, 110, 0.32);
 }
 
+/* Measles vis: title (h4) and running total share one type scale (matches outcome line) */
+#measles-spread-title.story-title,
+#measles-spread-sub.story-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
 /* Measles vis: flash infected counts in outcome title and running total */
 #measles-spread-title .measles-outcome-count,
 #measles-spread-sub .measles-outcome-count {
