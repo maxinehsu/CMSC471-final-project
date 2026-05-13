@@ -318,7 +318,7 @@ const measlesSpreadVis = () => {
     if (timer) { clearTimeout(timer); timer = null; }
     phase = "done";
     btnEl.textContent   = "Reset";
-    titleEl.textContent = `Outcome: — ${totalInfected} people infected`;
+    titleEl.textContent = `Outcome: ${totalInfected} people infected`;
     subEl.textContent   = "Measles spreads to 12–18 people per infected person — 6× more contagious than COVID-19.";
   };
 
