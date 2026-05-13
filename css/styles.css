@@ -308,3 +308,38 @@ details > div > div {
 
   box-shadow: 0 12px 28px rgba(123, 111, 110, 0.32);
 }
+
+/* Measles vis: flash infected counts in outcome title and running total */
+#measles-spread-title .measles-outcome-count,
+#measles-spread-sub .measles-outcome-count {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes measles-outcome-count-flash {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    color: inherit;
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.18);
+    color: #e24b4a;
+  }
+  70% {
+    opacity: 0.35;
+    transform: scale(1.05);
+    color: #e24b4a;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    color: inherit;
+  }
+}
+
+#measles-spread-title .measles-outcome-count--flash,
+#measles-spread-sub .measles-outcome-count--flash {
+  animation: measles-outcome-count-flash 0.85s ease-out;
+}
