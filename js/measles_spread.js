@@ -344,7 +344,7 @@ const measlesSpreadVis = () => {
       phase = "initial";
       btnEl.textContent   = "Watch what happens next →";
       titleEl.textContent = "John gets infected with measles";
-      subEl.textContent   = "See how quickly measles spreads — one of the most contagious diseases on Earth.";
+      subEl.textContent   = "See how quickly measles — one of the most contagious diseases - spreads.";
       init();
     }
   });
