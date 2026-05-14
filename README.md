@@ -2,7 +2,7 @@
 ### GROUP 2: Zoey Tsai, Maxine Hsu, Erica Honadel
 
 ## Visualization Problem
-We address the resurgence of multiple vaccine-preventable diseases that is caused by declining immunization rates. Despite the proven efficacy of these vaccines, skepticism towards vaccines, overreliance on herd immunity, and lack of access has caused several diseases to reemerge as significant threats. The relationship between immunization rates and the number of cases of different diseases is nonlinear, which can make it hard for a skeptical audience to understand the impact of immunization rates on these resurgences. We have created a set of interactive visualizations that captures trends in disease transmission and vaccine coverage across different geographic and temporal regions to show the audience how vaccine coverage impacts disease transmission.
+We address the resurgence of multiple vaccine-preventable diseases that is caused by declining immunization rates. Despite the proven efficacy of these vaccines, skepticism towards vaccines, overreliance on herd immunity, and lack of access has caused several diseases to reemerge as significant threats. The relationship between immunization rates and the number of cases of different diseases is nonlinear, which can make it hard for a skeptical audience to understand the impact of immunization rates on these resurgences. We have created a set of interactive visualizations that captures trends in disease transmission and vaccine coverage across different geographic and temporal regions to show the audience how vaccine coverage impacts disease transmission. 
 
 ## Datasets
 - “Immunization Coverage Estimates.” World Health Organization. Accessed May 3, 2026. https://www.who.int/data/gho/data/themes/topics/indicator-groups/indicator-group-details/GHO/immunization-coverage-estimates. 
@@ -19,6 +19,9 @@ We address the resurgence of multiple vaccine-preventable diseases that is cause
 - **Zoey** created both measles spread visualizations and edited text to be less verbose and to connect the different visualizations.
 - **Maxine** wrote the "Why Does This Matter?" section, animated the opening and closing of the disclosure widgets, edited text formatting to improve visual clarity and consistency, and emphasized key terms and information.
 - **Erica** created the "Outbreak Timeline" and "Global Outbreak Map" visualizations.
+
+## AI Usage
+Generative AI tools like Cursor and Claude were used to generate and iteratively debug code for the visualizations.
 
 ## Bibliography
 1. Spooner, Fiona, Saloni Dattani, Samantha Vanderslott, and Max Roser. “Vaccination.” Our World in Data, July 2015. https://ourworldindata.org/vaccination. 
