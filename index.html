@@ -90,12 +90,26 @@
           <p  id="measles-spread-sub"  class="story-title">...</p>
           <p  id="measles-spread-sub2" class="story-title"></p>
           <button id="measles-spread-btn" ...>Watch what happens next →</button>
-          <svg id="measles-spread-svg" ...></svg>
+
+          <div class="vacc-spread-legend mt-3 mb-1" aria-label="Measles spread legend">
+            <span class="vacc-legend-item">
+              <span class="vacc-legend-swatch" style="background:rgba(15,23,42,0.55);border-color:rgba(15,23,42,0.70);"></span>
+              Susceptible (unvaccinated)
+            </span>
+            <span class="vacc-legend-item">
+              <span class="vacc-legend-swatch" style="background:var(--outbreak);border-color:var(--outbreak);"></span>
+              Infected
+            </span>
+          </div>
+
+          <div class="measles-spread-vis-box">
+            <svg id="measles-spread-svg" ...></svg>
+          </div>
           <p class="visually-hidden">People infected: <strong id="measles-spread-count">1</strong></p>
         </div>
 
         <p class="story-text">
-          <br>In just a few generations, the measles outbreak spread throughout
+          <br><br>In just a few generations, the measles outbreak spread throughout
           John's community. 
           <br>
         </p>        
@@ -107,6 +121,35 @@
           from one person to another. <br>This is due to herd immunity.
           <br>
         </p>
+
+        <div id="vis-vacc-spread">
+          <h4 id="vacc-spread-title" class="story-title">
+            What if 95% of the community were vaccinated?
+          </h4>
+          <p id="vacc-spread-sub"  class="story-title">Teal figures are vaccinated (immune). Grey figures are susceptible. John (black) is infected.</p>
+          <p id="vacc-spread-sub2" class="story-title"></p>
+
+          <button id="vacc-spread-btn">See it with 95% vaccination →</button>
+
+          <div class="vacc-spread-legend mt-3 mb-1" aria-label="Vaccinated simulation legend">
+            <span class="vacc-legend-item">
+              <span class="vacc-legend-swatch" style="background:var(--teal);border-color:var(--teal);"></span>
+              Vaccinated / immune
+            </span>
+            <span class="vacc-legend-item">
+              <span class="vacc-legend-swatch" style="background:rgba(15,23,42,0.18);border-color:rgba(15,23,42,0.30);"></span>
+              Susceptible (unvaccinated ~5%)
+            </span>
+            <span class="vacc-legend-item">
+              <span class="vacc-legend-swatch" style="background:var(--outbreak);border-color:var(--outbreak);"></span>
+              Infected
+            </span>
+          </div>
+
+          <svg id="vacc-spread-svg"></svg>
+          <p class="visually-hidden">People infected: <strong id="vacc-spread-count">1</strong></p>
+        </div>
+        <br>
         <h4 class="story-title">What is herd immunity?</h4>
         <p class="story-text">
           <b>Herd immunity</b> is when the <b>population has enough immunity to a disease
@@ -241,6 +284,12 @@
  
     <script src="js/measles_spread.js"></script>
     <script src="js/script.js"></script>
+    <script>
+      // Boot the vaccinated simulation (measlesVaccinatedVis is defined in measles_spread.js)
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof measlesVaccinatedVis === "function") measlesVaccinatedVis();
+      });
+    </script>
  
     <!-- Bootstrap JS (optional) -->
     <script

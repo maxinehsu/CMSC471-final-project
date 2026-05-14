@@ -291,8 +291,119 @@ small {
   font-size: 13px;
 }
 
-/* ------------------------------------------------------------------------------------------
-  everything between the horizontal lines is adapted from https://blog.logrocket.com/styling-html-modern-css/ */
+/* ── Vaccinated simulation ────────────────────────────────────────────────── */
+
+#vis-vacc-spread {
+  margin-top: 1.5rem;
+}
+
+#vacc-spread-title.story-title,
+#vacc-spread-sub.story-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+#vacc-spread-title .measles-outcome-count,
+#vacc-spread-sub  .measles-outcome-count {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+#vacc-spread-title .measles-outcome-count--flash,
+#vacc-spread-sub  .measles-outcome-count--flash {
+  animation: measles-outcome-count-flash 0.85s ease-out;
+}
+
+#vacc-spread-btn {
+  background: var(--teal);
+  color: white;
+  border: none;
+
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.28);
+}
+
+#vacc-spread-btn:hover:not(:disabled) {
+  background: #0d9488;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.36);
+}
+
+#vacc-spread-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.vacc-spread-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-bottom: 0.75rem;
+}
+
+.vacc-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vacc-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1.5px solid transparent;
+  flex-shrink: 0;
+}
+
+#vacc-spread-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.measles-spread-vis-box {
+  margin-top: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: clip;
+}
+
+.measles-spread-vis-box #measles-spread-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  margin-top: 0;
+}
 
 details {
   interpolate-size: allow-keywords;

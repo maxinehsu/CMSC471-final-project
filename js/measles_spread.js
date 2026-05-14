@@ -407,7 +407,7 @@ function measlesSpreadVis() {
    */
   function showOutcomeTitleFlashing(total) {
     flashCountInElement(titleEl, "Outcome: ", total);
-    titleEl.append(" people infected");
+    titleEl.append(" infected");
     subEl2.textContent =
       "Measles spreads to 12–18 people per infected person — 6× more contagious than COVID-19.";
   }
@@ -492,3 +492,386 @@ function measlesSpreadVis() {
 }
 
 window.measlesSpreadVis = measlesSpreadVis;
+
+// -----------------------------------------------------------------------------
+// Vaccinated simulation — 95% of grid is immune (teal/green), disease fizzles
+// -----------------------------------------------------------------------------
+
+const MEASLES_VACC = Object.freeze({
+  width: 660,
+  height: 380,
+  figureScale: 0.4,
+  cellWidth: 20,
+  cellHeight: 30,
+  slotYOffset: 8,
+
+  timing: Object.freeze({
+    generationAppearMs: 2800,
+    waveIntervalMs: 2800,
+    infectionDelayMs: 800,
+    infectionGrowMs: 1600,
+    personFadeMs: 300,
+    immuneRevealStaggerMs: 2,   // ms between each immune figure appearing (fast sweep)
+    immuneRevealBatchSize: 8,   // reveal this many per rAF tick for smooth perf
+  }),
+
+  vaccineRate: 0.95,
+
+  newInfectionsPerCarrierMin: 12,
+  newInfectionsPerCarrierMax: 18,
+
+  maxWaves: 6,   // cap — disease will fizzle long before this
+
+  selectors: Object.freeze({
+    svg:   "#vacc-spread-svg",
+    title: "#vacc-spread-title",
+    sub:   "#vacc-spread-sub",
+    sub2:  "#vacc-spread-sub2",
+    btn:   "#vacc-spread-btn",
+    count: "#vacc-spread-count",
+  }),
+});
+
+const VACC_IMMUNE_COLOR  = "#14b8a6";   // teal-500 — matches Global Outbreaks Map
+const VACC_IMMUNE_LIGHT  = "#99f6e4";   // lighter teal for the shield badge
+const VACC_SUSCEPTIBLE   = "rgba(15,23,42,0.40)";
+
+/**
+ * Draw a stick figure, optionally with a small shield badge.
+ * Returns { chestY, bodyG }.
+ */
+function drawVaccPersonFigure(parentG, cx, cy, scale, color) {
+  const bodyG = parentG.append("g").attr("class", "vacc-figure-body");
+
+  const headR = 7  * scale;
+  const headY = cy - 20 * scale;
+  const bTop  = headY + headR;
+  const bBot  = bTop  + 20 * scale;
+  const armY  = bTop  + 7  * scale;
+  const armSpan = 10 * scale;
+  const legSpan =  6 * scale;
+  const legLen  = 18 * scale;
+
+  bodyG.append("circle").attr("cx", cx).attr("cy", headY).attr("r", headR).attr("fill", color);
+  bodyG.append("line").attr("x1", cx).attr("y1", bTop).attr("x2", cx).attr("y2", bBot)
+    .attr("stroke", color).attr("stroke-width", 3 * scale);
+  bodyG.append("line").attr("x1", cx - armSpan).attr("y1", armY).attr("x2", cx + armSpan).attr("y2", armY)
+    .attr("stroke", color).attr("stroke-width", 2.5 * scale);
+  bodyG.append("line").attr("x1", cx).attr("y1", bBot).attr("x2", cx - legSpan).attr("y2", bBot + legLen)
+    .attr("stroke", color).attr("stroke-width", 2.5 * scale);
+  bodyG.append("line").attr("x1", cx).attr("y1", bBot).attr("x2", cx + legSpan).attr("y2", bBot + legLen)
+    .attr("stroke", color).attr("stroke-width", 2.5 * scale);
+
+  const chestY = bTop + 6 * scale;
+  return { chestY, bodyG };
+}
+
+/** Small shield / check badge above an immune figure's head. */
+function drawImmuneBadge(parentG, cx, headTopY, scale) {
+  const bx = cx;
+  const by = headTopY - 9 * scale;
+  const w  = 7 * scale;
+  const h  = 8 * scale;
+  // shield path: rounded top, pointed bottom
+  parentG.append("path")
+    .attr("d", `M${bx},${by + h} L${bx - w},${by + h * 0.35} Q${bx - w},${by} ${bx},${by} Q${bx + w},${by} ${bx + w},${by + h * 0.35} Z`)
+    .attr("fill", VACC_IMMUNE_COLOR)
+    .attr("opacity", 0.85);
+  // tiny check mark
+  parentG.append("path")
+    .attr("d", `M${bx - w * 0.4},${by + h * 0.55} L${bx - w * 0.05},${by + h * 0.78} L${bx + w * 0.45},${by + h * 0.32}`)
+    .attr("fill", "none")
+    .attr("stroke", "white")
+    .attr("stroke-width", 1.4 * scale)
+    .attr("stroke-linecap", "round")
+    .attr("stroke-linejoin", "round");
+}
+
+function measlesVaccinatedVis() {
+  const cfg = MEASLES_VACC;
+  const t   = cfg.timing;
+  const sel = cfg.selectors;
+
+  const svgEl   = document.querySelector(sel.svg);
+  const titleEl = document.querySelector(sel.title);
+  const subEl   = document.querySelector(sel.sub);
+  const subEl2  = document.querySelector(sel.sub2);
+  const btnEl   = document.querySelector(sel.btn);
+  const countEl = document.querySelector(sel.count);
+
+  if (!svgEl || !titleEl || !subEl || !btnEl || !countEl) {
+    console.warn("measlesVaccinatedVis: required DOM nodes missing; skipping init.");
+    return;
+  }
+
+  let vizHeight = cfg.height;
+  let grid = createMeaslesGrid(cfg.width, vizHeight, cfg.cellWidth, cfg.cellHeight, cfg.slotYOffset);
+
+  const svg = d3.select(svgEl).attr("viewBox", `0 0 ${cfg.width} ${vizHeight}`);
+  function applyViewBox() { svg.attr("viewBox", `0 0 ${cfg.width} ${vizHeight}`); }
+
+  // State
+  let phase = "initial";   // "initial" | "revealing" | "spreading" | "done"
+  let waveTimer = null;
+  let totalInfected = 1;
+  let waveIndex = 0;
+  let currentGenerationSize = 1;
+
+  const occupiedSlots  = new Set();
+  /** slots that are immune (pre-assigned before reveal animation starts) */
+  const immuneSlots    = new Set();
+  /** slots that are susceptible (unvaccinated) */
+  const susceptibleSlots = new Set();
+
+  const johnCenterSlot = () => grid.xyToSlot(cfg.width / 2, cfg.height / 2);
+
+  function clearWaveTimer() {
+    if (waveTimer != null) { clearTimeout(waveTimer); waveTimer = null; }
+  }
+
+  // ------------------------------------------------------------------
+  // Populate immune / susceptible split across entire grid
+  // ------------------------------------------------------------------
+  function assignImmunity() {
+    immuneSlots.clear();
+    susceptibleSlots.clear();
+    const johnSlot = johnCenterSlot();
+    for (let i = 0; i < grid.slotCount; i++) {
+      if (i === johnSlot) continue;
+      if (Math.random() < cfg.vaccineRate) {
+        immuneSlots.add(i);
+      } else {
+        susceptibleSlots.add(i);
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Draw John (infected) at grid center
+  // ------------------------------------------------------------------
+  function drawJohn() {
+    const slot = johnCenterSlot();
+    occupiedSlots.add(slot);
+    const { x, y } = grid.slotToXY(slot);
+    const color = "black";
+    const g = svg.append("g").attr("opacity", 1);
+    const { chestY } = drawVaccPersonFigure(g, x, y, cfg.figureScale, color);
+    animateMeaslesInfectionCircle(g, x, chestY, cfg.figureScale, t.infectionDelayMs, t.infectionGrowMs);
+    g.append("text")
+      .attr("id", "vacc-john-label")
+      .attr("x", x).attr("y", y + 20)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 9)
+      .attr("font-family", "Inter, system-ui, sans-serif")
+      .attr("fill", "black")
+      .text("John");
+  }
+
+  // ------------------------------------------------------------------
+  // Animated reveal of the full grid (immune = teal, susceptible = muted)
+  // ------------------------------------------------------------------
+  function revealGrid(onComplete) {
+    const allSlots = [...immuneSlots, ...susceptibleSlots];
+    // shuffle so reveal isn't strictly by index order (looks more organic)
+    for (let i = allSlots.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allSlots[i], allSlots[j]] = [allSlots[j], allSlots[i]];
+    }
+
+    let idx = 0;
+    const batch = t.immuneRevealBatchSize;
+
+    function drawBatch() {
+      const end = Math.min(idx + batch, allSlots.length);
+      for (; idx < end; idx++) {
+        const slot = allSlots[idx];
+        const { x, y } = grid.slotToXY(slot);
+        const isImmune = immuneSlots.has(slot);
+        const color = isImmune ? VACC_IMMUNE_COLOR : VACC_SUSCEPTIBLE;
+
+        const g = svg.append("g").attr("opacity", 0).attr("data-slot", slot);
+        g.transition().duration(t.personFadeMs).attr("opacity", 1);
+        const headR = 7 * cfg.figureScale;
+        const headY = y - 20 * cfg.figureScale;
+        drawVaccPersonFigure(g, x, y, cfg.figureScale, color);
+        if (isImmune) drawImmuneBadge(g, x, headY - headR, cfg.figureScale);
+      }
+
+      if (idx < allSlots.length) {
+        setTimeout(drawBatch, t.immuneRevealStaggerMs);
+      } else {
+        onComplete();
+      }
+    }
+    drawBatch();
+  }
+
+  // ------------------------------------------------------------------
+  // Wave logic — only susceptible, unoccupied slots can be infected
+  // ------------------------------------------------------------------
+  function pickVaccFreeSlots(n) {
+    // candidates: susceptible AND not yet occupied
+    const candidates = [];
+    for (const slot of susceptibleSlots) {
+      if (occupiedSlots.has(slot)) continue;   // already placed (infected or immune)
+      const { x, y } = grid.slotToXY(slot);
+      let minDist = Infinity;
+      occupiedSlots.forEach(occ => {
+        const p = grid.slotToXY(occ);
+        const d = Math.hypot(x - p.x, y - p.y);
+        if (d < minDist) minDist = d;
+      });
+      candidates.push({ slot, dist: minDist });
+    }
+    candidates.sort((a, b) => a.dist - b.dist);
+    return candidates.slice(0, n).map(c => c.slot);
+  }
+
+  function addInfectedPerson(slot, appearDelayMs) {
+    const { x, y } = grid.slotToXY(slot);
+    // Remove whatever figure is already there (the susceptible grey one)
+    // We tag each figure group with a data attribute so we can find & replace it
+    svg.selectAll(`[data-slot="${slot}"]`).remove();
+
+    const g = svg.append("g").attr("opacity", 0).attr("data-slot", slot);
+    g.transition().delay(appearDelayMs).duration(t.personFadeMs).attr("opacity", 1);
+    const { bodyG } = drawVaccPersonFigure(g, x, y, cfg.figureScale, VACC_SUSCEPTIBLE);
+    animateMeaslesInfectionBody(bodyG, appearDelayMs + t.infectionDelayMs, t.infectionGrowMs);
+  }
+
+  function flashCountVacc(containerEl, before, count) {
+    const n = String(Math.max(0, Math.floor(Number(count))));
+    containerEl.replaceChildren();
+    containerEl.append(before);
+    const span = document.createElement("span");
+    span.className = "measles-outcome-count";
+    span.textContent = n;
+    containerEl.appendChild(span);
+    requestAnimationFrame(() => {
+      span.classList.add("measles-outcome-count--flash");
+      span.addEventListener("animationend", () => span.classList.remove("measles-outcome-count--flash"), { once: true });
+    });
+  }
+
+  function stopSpreading(fizzled) {
+    clearWaveTimer();
+    phase = "done";
+    btnEl.textContent = "Reset";
+    const msg = fizzled
+      ? `Outcome: only `
+      : `Outcome: `;
+    flashCountVacc(titleEl, msg, totalInfected);
+    titleEl.append(" infected");
+    if (subEl2) subEl2.textContent = "With 95% vaccination, herd immunity reduced infection rate.";
+  }
+
+  function runVaccWave() {
+    const randSpan = cfg.newInfectionsPerCarrierMax - cfg.newInfectionsPerCarrierMin + 1;
+    let target = 0;
+    for (let i = 0; i < currentGenerationSize; i++) {
+      // Each exposure only infects if the contact is unvaccinated (~5% chance per contact)
+      const attempts = Math.floor(Math.random() * randSpan) + cfg.newInfectionsPerCarrierMin;
+      for (let a = 0; a < attempts; a++) {
+        if (Math.random() > cfg.vaccineRate) target++;
+      }
+    }
+
+    const slots = pickVaccFreeSlots(target);
+    const n = slots.length;
+
+    if (n === 0) {
+      // No susceptible contacts reachable — fizzled
+      stopSpreading(true);
+      return;
+    }
+
+    const genMs = t.generationAppearMs;
+    const staggerMs = n <= 1 ? 0 : Math.max(0, (genMs - t.personFadeMs) / (n - 1));
+
+    slots.forEach((slot, i) => {
+      occupiedSlots.add(slot);
+      addInfectedPerson(slot, i * staggerMs);
+    });
+
+    currentGenerationSize = slots.length;
+    totalInfected += slots.length;
+    waveIndex++;
+
+    countEl.textContent = String(totalInfected);
+    flashCountVacc(titleEl, `Generation ${waveIndex}: `, slots.length);
+    titleEl.append(" newly infected");
+    flashCountVacc(subEl, "Total infected so far: ", totalInfected);
+
+    const waveAppearMs = n <= 1 ? genMs : (n - 1) * staggerMs + t.personFadeMs;
+    const timeToNext = Math.max(t.waveIntervalMs, waveAppearMs);
+
+    if (waveIndex >= cfg.maxWaves || slots.length === 0) {
+      setTimeout(() => stopSpreading(true), timeToNext);
+    } else if (phase === "spreading") {
+      waveTimer = setTimeout(runVaccWave, timeToNext);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Reset
+  // ------------------------------------------------------------------
+  function resetToInitial() {
+    clearWaveTimer();
+    svg.selectAll("*").remove();
+    occupiedSlots.clear();
+    totalInfected = 1;
+    waveIndex = 0;
+    currentGenerationSize = 1;
+    countEl.textContent = "1";
+
+    vizHeight = cfg.height;
+    grid = createMeaslesGrid(cfg.width, vizHeight, cfg.cellWidth, cfg.cellHeight, cfg.slotYOffset);
+    applyViewBox();
+
+    assignImmunity();
+    drawJohn();
+  }
+
+  // ------------------------------------------------------------------
+  // Button FSM
+  // ------------------------------------------------------------------
+  btnEl.addEventListener("click", () => {
+    if (phase === "initial") {
+      phase = "revealing";
+      btnEl.disabled = true;
+      btnEl.textContent = "Revealing population…";
+      titleEl.textContent = "95% of the community is vaccinated (teal) — only 5% are susceptible (grey)";
+      subEl.textContent = "";
+      if (subEl2) subEl2.textContent = "";
+
+      // Hide John's name label as the simulation begins
+      d3.select("#vacc-john-label").transition().duration(300).style("opacity", 0);
+
+      revealGrid(() => {
+        phase = "spreading";
+        btnEl.disabled = false;
+        btnEl.textContent = "Stop";
+        runVaccWave();
+      });
+
+    } else if (phase === "spreading") {
+      stopSpreading(false);
+    } else if (phase === "done") {
+      phase = "initial";
+      btnEl.textContent = "See it with 95% vaccination →";
+      titleEl.textContent = "What if 95% of the community were vaccinated?";
+      subEl.textContent = "";
+      if (subEl2) subEl2.textContent = "";
+      resetToInitial();
+    }
+  });
+
+  // Initial copy
+  titleEl.textContent = "What if 95% of the community were vaccinated?";
+  subEl.textContent   = "";
+  if (subEl2) subEl2.textContent = "";
+
+  resetToInitial();
+}
+
+window.measlesVaccinatedVis = measlesVaccinatedVis;
